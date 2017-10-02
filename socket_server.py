@@ -55,8 +55,6 @@ class SocketServer:
                 if len(self.server_icon) > 0:
                     motd["favicon"] = self.server_icon
 
-                print(motd)
-
                 self.write_response(client_socket, json.dumps(motd))
             elif state == 2:
                 print("%s:%s has tried to connect to the server (%s:%s)" % (addr[0], addr[1], ip, port_tuple[0]))

@@ -14,7 +14,7 @@ def read_varint(byte, i):
             if (byte_in & 0x80) != 0x80:
                 return result, i
         except IndexError:
-            print("A invalid byte array was requested!")
+            print("An invalid byte array was requested!")
 
 
 def read_utf(byte, i):
