@@ -39,7 +39,6 @@ def main():
 
         for message in configuration["kick_message"]:
             kick_message += message + "\n"
-        kick_message = kick_message[:-2]
 
         if not os.path.exists(configuration["server_icon"]):
             logger.warning("Server icon doesn't exists - submitting none...")
