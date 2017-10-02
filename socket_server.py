@@ -70,7 +70,7 @@ class SocketServer:
             client_socket.sendall(bytearray)
             print("Send pong to %s" % addr)
         else:
-            print("%s tried to request a unknown packet: %s" % (addr, packetID))
+            print("%s:%s tried to request a unknown packet: %s" % (addr[0], addr[1], packetID))
 
     def write_response(self, client_socket, response):
         response_array = bytearray()
