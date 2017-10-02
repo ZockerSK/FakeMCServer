@@ -36,7 +36,7 @@ class SocketServer:
             (port_tuple, i) = byte_utils.read_ushort(data, i)
             (state, i) = byte_utils.read_varint(data, i)
             if state == 1:
-                print("%s:%s has pinged the server (%s:%s)" % (addr[0], addr[1], ip, port_tuple[0]))
+                print("%s:%s has sent a ping to the server (%s:%s)" % (addr[0], addr[1], ip, port_tuple[0]))
 
                 motd = {}
                 motd["version"] = {}
