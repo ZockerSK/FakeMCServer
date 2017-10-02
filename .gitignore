@@ -105,3 +105,4 @@ ENV/
 
 # Project
 config.json
+logs/

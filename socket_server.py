@@ -5,7 +5,6 @@ import uuid
 
 import byte_utils
 
-
 class SocketServer:
     ip = None
     port = None
@@ -16,7 +15,7 @@ class SocketServer:
     server_icon = None
     s = None
 
-    def __init__(self, ip, port, motd, version_text, kick_message, samples, server_icon):
+    def __init__(self, ip, port, motd, version_text, kick_message, samples, server_icon, logger):
         self.ip = ip
         self.port = port
         self.motd = motd
@@ -24,6 +23,7 @@ class SocketServer:
         self.kick_message = kick_message
         self.samples = samples
         self.server_icon = server_icon
+        self.logger = logger
 
     def on_new_client(self, client_socket, addr):
         data = client_socket.recv(1024)
@@ -36,8 +36,7 @@ class SocketServer:
             (port_tuple, i) = byte_utils.read_ushort(data, i)
             (state, i) = byte_utils.read_varint(data, i)
             if state == 1:
-                print("%s:%s has sent a ping to the server (%s:%s)" % (addr[0], addr[1], ip, port_tuple[0]))
-
+                self.logger.info("[%s:%s] Received client ping packet (%s:%s)." % (addr[0], addr[1], ip, port_tuple[0]))
                 motd = {}
                 motd["version"] = {}
                 motd["version"]["name"] = self.version_text
@@ -52,15 +51,15 @@ class SocketServer:
 
                 motd["description"] = {"text": self.motd}
 
-                if len(self.server_icon) > 0:
+                if self.server_icon and len(self.server_icon) > 0:
                     motd["favicon"] = self.server_icon
 
                 self.write_response(client_socket, json.dumps(motd))
             elif state == 2:
-                print("%s:%s has tried to connect to the server (%s:%s)" % (addr[0], addr[1], ip, port_tuple[0]))
+                self.logger.info("[%s:%s] Tries to connect to the server (%s:%s)." % (addr[0], addr[1], ip, port_tuple[0]))
                 self.write_response(client_socket, json.dumps({"text": self.kick_message}))
             else:
-                print("%s:%s tried to request a login/ping with a unknown state: %s" % (addr[0], addr[1], state))
+                self.logger.info("[%s:%d] Tried to request a login/ping with an unknown state: %d" % (addr[0], addr[1], state))
         elif packetID == 1:
             (long, i) = byte_utils.read_long(data, i)
             response = bytearray()
@@ -68,9 +67,9 @@ class SocketServer:
             byte_utils.write_varint(response, 1)
             bytearray.append(long)
             client_socket.sendall(bytearray)
-            print("Send pong to %s" % addr)
+            self.logger.info("[%s:%d] Responded with pong packet." % (addr[0], addr[1]))
         else:
-            print("%s:%s tried to request a unknown packet: %s" % (addr[0], addr[1], packetID))
+            self.logger.warning("[%s:%d] Sent an unexpected packet: %d" % (addr[0], addr[1], packetID))
 
     def write_response(self, client_socket, response):
         response_array = bytearray()
@@ -86,7 +85,7 @@ class SocketServer:
         self.s.bind((self.ip, self.port))
         self.s.settimeout(5000)
         self.s.listen(30)
-        print("Server started!")
+        self.logger.info("Server started on %s:%s! Waiting for incoming connections..." % (self.ip, self.port))
         while 1:
             (client, address) = self.s.accept()
             _thread.start_new_thread(self.on_new_client, (client, address,))
