@@ -19,6 +19,7 @@ def main():
         motd = configuration["motd"]["1"] + "\n" + configuration["motd"]["2"]
         version_text = configuration["version_text"]
         kick_message = ""
+        samples = configuration["samples"]
         server_icon = None
 
         for message in configuration["kick_message"]:
@@ -32,7 +33,7 @@ def main():
                 server_icon = "data:image/png;base64," + base64.b64encode(image.read()).decode()
         try:
             global server
-            server = SocketServer(ip, port, motd, version_text, kick_message, server_icon)
+            server = SocketServer(ip, port, motd, version_text, kick_message, samples, server_icon)
             server.start()
         except KeyboardInterrupt:
             server.close()
