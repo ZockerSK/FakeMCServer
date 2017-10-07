@@ -14,7 +14,7 @@ class SocketServer:
     kick_message = None
     samples = None
     server_icon = None
-    s = None
+    sock = None
 
     def __init__(self, ip, port, motd, version_text, kick_message, samples, server_icon, logger):
         self.ip = ip
@@ -28,67 +28,73 @@ class SocketServer:
 
     def on_new_client(self, client_socket, addr):
         data = client_socket.recv(1024)
-        (length, i) = byte_utils.read_varint(data, 0)
-        (packetID, i) = byte_utils.read_varint(data, i)
 
-        if packetID == 0:
-            (version, i) = byte_utils.read_varint(data, i)
-            (ip, i) = byte_utils.read_utf(data, i)
+        try:
+            (length, i) = byte_utils.read_varint(data, 0)
+            (packetID, i) = byte_utils.read_varint(data, i)
 
-            ip = ip.replace('\x00', '')
-            is_using_fml = False
+            if packetID == 0:
+                (version, i) = byte_utils.read_varint(data, i)
+                (ip, i) = byte_utils.read_utf(data, i)
 
-            if ip.endswith("FML"):
-                is_using_fml = True
-                ip = ip[:-3]
+                ip = ip.replace('\x00', '')
+                is_using_fml = False
 
-            (port_tuple, i) = byte_utils.read_ushort(data, i)
-            (state, i) = byte_utils.read_varint(data, i)
-            if state == 1:
-                self.logger.info(("[%s:%s] Received client " + ("(using ForgeModLoader) " if is_using_fml else "") +
-                                  "ping packet (%s:%s).") % (addr[0], addr[1], ip, port_tuple[0]))
-                motd = {}
-                motd["version"] = {}
-                motd["version"]["name"] = self.version_text
-                motd["version"]["protocol"] = 2
-                motd["players"] = {}
-                motd["players"]["max"] = 0
-                motd["players"]["online"] = 0
-                motd["players"]["sample"] = []
+                if ip.endswith("FML"):
+                    is_using_fml = True
+                    ip = ip[:-3]
 
-                for sample in self.samples:
-                    motd["players"]["sample"].append({"name": sample, "id": str(uuid.uuid4())})
+                (port, i) = byte_utils.read_ushort(data, i)
+                (state, i) = byte_utils.read_varint(data, i)
+                if state == 1:
+                    self.logger.info(("[%s:%s] Received client " + ("(using ForgeModLoader) " if is_using_fml else "") +
+                                      "ping packet (%s:%s).") % (addr[0], addr[1], ip, port))
+                    motd = {}
+                    motd["version"] = {}
+                    motd["version"]["name"] = self.version_text
+                    motd["version"]["protocol"] = 2
+                    motd["players"] = {}
+                    motd["players"]["max"] = 0
+                    motd["players"]["online"] = 0
+                    motd["players"]["sample"] = []
 
-                motd["description"] = {"text": self.motd}
+                    for sample in self.samples:
+                        motd["players"]["sample"].append({"name": sample, "id": str(uuid.uuid4())})
 
-                if self.server_icon and len(self.server_icon) > 0:
-                    motd["favicon"] = self.server_icon
+                    motd["description"] = {"text": self.motd}
 
-                self.write_response(client_socket, json.dumps(motd))
-            elif state == 2:
-                name = ""
-                if len(data) != i:
-                    (some_int, i) = byte_utils.read_varint(data, i)
-                    (some_int, i) = byte_utils.read_varint(data, i)
-                    (name, i) = byte_utils.read_utf(data, i)
-                self.logger.info(
-                    ("[%s:%s] " + (name + " t" if len(name) > 0 else "T") + "ries to connect to the server " +
-                     ("(using ForgeModLoader) " if is_using_fml else "") + "(%s:%s).")
-                    % (addr[0], addr[1], ip, port_tuple[0]))
-                self.write_response(client_socket, json.dumps({"text": self.kick_message}))
+                    if self.server_icon and len(self.server_icon) > 0:
+                        motd["favicon"] = self.server_icon
+
+                    self.write_response(client_socket, json.dumps(motd))
+                elif state == 2:
+                    name = ""
+                    if len(data) != i:
+                        (some_int, i) = byte_utils.read_varint(data, i)
+                        (some_int, i) = byte_utils.read_varint(data, i)
+                        (name, i) = byte_utils.read_utf(data, i)
+                    self.logger.info(
+                        ("[%s:%s] " + (name + " t" if len(name) > 0 else "T") + "ries to connect to the server " +
+                         ("(using ForgeModLoader) " if is_using_fml else "") + "(%s:%s).")
+                        % (addr[0], addr[1], ip, port))
+                    self.write_response(client_socket, json.dumps({"text": self.kick_message}))
+                else:
+                    self.logger.info(
+                        "[%s:%d] Tried to request a login/ping with an unknown state: %d" % (addr[0], addr[1], state))
+            elif packetID == 1:
+                (long, i) = byte_utils.read_long(data, i)
+                response = bytearray()
+                byte_utils.write_varint(response, 9)
+                byte_utils.write_varint(response, 1)
+                bytearray.append(long)
+                client_socket.sendall(bytearray)
+                self.logger.info("[%s:%d] Responded with pong packet." % (addr[0], addr[1]))
             else:
-                self.logger.info(
-                    "[%s:%d] Tried to request a login/ping with an unknown state: %d" % (addr[0], addr[1], state))
-        elif packetID == 1:
-            (long, i) = byte_utils.read_long(data, i)
-            response = bytearray()
-            byte_utils.write_varint(response, 9)
-            byte_utils.write_varint(response, 1)
-            bytearray.append(long)
-            client_socket.sendall(bytearray)
-            self.logger.info("[%s:%d] Responded with pong packet." % (addr[0], addr[1]))
-        else:
-            self.logger.warning("[%s:%d] Sent an unexpected packet: %d" % (addr[0], addr[1], packetID))
+                self.logger.warning("[%s:%d] Sent an unexpected packet: %d" % (addr[0], addr[1], packetID))
+        except TypeError:
+            self.logger.warning("An invalid data was sent (%s)" % data)
+            return
+
 
     def write_response(self, client_socket, response):
         response_array = bytearray()
@@ -100,14 +106,15 @@ class SocketServer:
         client_socket.sendall(response_array)
 
     def start(self):
-        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.s.bind((self.ip, self.port))
-        self.s.settimeout(5000)
-        self.s.listen(30)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.bind((self.ip, self.port))
+        self.sock.settimeout(5000)
+        self.sock.listen(30)
         self.logger.info("Server started on %s:%s! Waiting for incoming connections..." % (self.ip, self.port))
         while 1:
-            (client, address) = self.s.accept()
+            (client, address) = self.sock.accept()
             _thread.start_new_thread(self.on_new_client, (client, address,))
 
     def close(self):
-        self.s.close()
+        self.sock.close()

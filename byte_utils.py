@@ -27,7 +27,7 @@ def read_utf(byte, i):
 
 def read_ushort(byte, i):
     new_i = i + 2
-    return struct.unpack(">H", byte[i:new_i]), new_i
+    return struct.unpack(">H", byte[i:new_i])[0], new_i
 
 
 def read_long(byte, i):
