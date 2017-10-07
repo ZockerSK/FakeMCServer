@@ -5,17 +5,13 @@ def read_varint(byte, i):
     result = 0
     bytes = 0
     while True:
-        try:
-            byte_in = byte[i]
-            i += 1
-            result |= (byte_in & 0x7F) << (bytes * 7)
-            if bytes > 32:
-                raise IOError("Packet is too long!")
-            if (byte_in & 0x80) != 0x80:
-                return result, i
-        except IndexError:
-            print("An invalid byte array was requested!")
-            break
+        byte_in = byte[i]
+        i += 1
+        result |= (byte_in & 0x7F) << (bytes * 7)
+        if bytes > 32:
+            raise IOError("Packet is too long!")
+        if (byte_in & 0x80) != 0x80:
+            return result, i
 
 
 def read_utf(byte, i):
@@ -36,7 +32,6 @@ def read_long(byte, i):
 
 
 def write_varint(byte, value):
-    part = None
     while True:
         part = value & 0x7F
         value >>= 7

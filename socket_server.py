@@ -91,10 +91,9 @@ class SocketServer:
                 self.logger.info("[%s:%d] Responded with pong packet." % (addr[0], addr[1]))
             else:
                 self.logger.warning("[%s:%d] Sent an unexpected packet: %d" % (addr[0], addr[1], packetID))
-        except TypeError:
-            self.logger.warning("An invalid data was sent (%s)" % data)
+        except (TypeError, IndexError):
+            self.logger.warning("Invalid data was sent to the server (%s)" % data)
             return
-
 
     def write_response(self, client_socket, response):
         response_array = bytearray()
