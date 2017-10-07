@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#!/usr/bin/env python3
+# !/usr/bin/env python3
 
 import logging
 import base64
@@ -9,6 +9,7 @@ import os.path
 from socket_server import SocketServer
 
 server = None
+
 
 def main():
     logger = logging.getLogger("FakeMCServer")
@@ -54,7 +55,7 @@ def main():
             logger.info("Shutting down server...")
             server.close()
             logger.info("Done. Thanks for using FakeMCServer!")
-            exit(1)
+            exit(0)
         except Exception as e:
             logger.exception(e)
     else:

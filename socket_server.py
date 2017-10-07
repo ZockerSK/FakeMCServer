@@ -5,6 +5,7 @@ import uuid
 
 import byte_utils
 
+
 class SocketServer:
     ip = None
     port = None
@@ -33,10 +34,19 @@ class SocketServer:
         if packetID == 0:
             (version, i) = byte_utils.read_varint(data, i)
             (ip, i) = byte_utils.read_utf(data, i)
+
+            ip = ip.replace('\x00', '')
+            is_using_fml = False
+
+            if ip.endswith("FML"):
+                is_using_fml = True
+                ip = ip[:-3]
+
             (port_tuple, i) = byte_utils.read_ushort(data, i)
             (state, i) = byte_utils.read_varint(data, i)
             if state == 1:
-                self.logger.info("[%s:%s] Received client ping packet (%s:%s)." % (addr[0], addr[1], ip, port_tuple[0]))
+                self.logger.info(("[%s:%s] Received client " + ("(using ForgeModLoader) " if is_using_fml else "") +
+                                  "ping packet (%s:%s).") % (addr[0], addr[1], ip, port_tuple[0]))
                 motd = {}
                 motd["version"] = {}
                 motd["version"]["name"] = self.version_text
@@ -56,10 +66,19 @@ class SocketServer:
 
                 self.write_response(client_socket, json.dumps(motd))
             elif state == 2:
-                self.logger.info("[%s:%s] Tries to connect to the server (%s:%s)." % (addr[0], addr[1], ip, port_tuple[0]))
+                name = ""
+                if len(data) != i:
+                    (some_int, i) = byte_utils.read_varint(data, i)
+                    (some_int, i) = byte_utils.read_varint(data, i)
+                    (name, i) = byte_utils.read_utf(data, i)
+                self.logger.info(
+                    ("[%s:%s] " + (name + " t" if len(name) > 0 else "T") + "ries to connect to the server " +
+                     ("(using ForgeModLoader) " if is_using_fml else "") + "(%s:%s).")
+                    % (addr[0], addr[1], ip, port_tuple[0]))
                 self.write_response(client_socket, json.dumps({"text": self.kick_message}))
             else:
-                self.logger.info("[%s:%d] Tried to request a login/ping with an unknown state: %d" % (addr[0], addr[1], state))
+                self.logger.info(
+                    "[%s:%d] Tried to request a login/ping with an unknown state: %d" % (addr[0], addr[1], state))
         elif packetID == 1:
             (long, i) = byte_utils.read_long(data, i)
             response = bytearray()
