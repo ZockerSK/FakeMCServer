@@ -23,6 +23,10 @@ class SocketServer:
         data = client_socket.recv(1024)
         client_ip = addr[0]
 
+        fqdn = socket.getfqdn(client_ip)
+        if self.show_hostname and client_ip != fqdn:
+            client_ip = fqdn + "/" + client_ip
+
         try:
             (length, i) = byte_utils.read_varint(data, 0)
             (packetID, i) = byte_utils.read_varint(data, i)
@@ -40,10 +44,6 @@ class SocketServer:
 
                 (port, i) = byte_utils.read_ushort(data, i)
                 (state, i) = byte_utils.read_varint(data, i)
-
-                fqdn = socket.getfqdn(client_ip)
-                if self.show_hostname and client_ip != fqdn:
-                    client_ip = fqdn + "/" + client_ip
 
                 if state == 1:
                     self.logger.info(("[%s:%s] Received client " + ("(using ForgeModLoader) " if is_using_fml else "") +
