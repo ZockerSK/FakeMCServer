@@ -36,9 +36,9 @@ def main():
         version_text = configuration["version_text"]
         kick_message = ""
         samples = configuration["samples"]
-        show_ip = configuration["show_ip_if_hostname_available"]
-
-        if show_ip is None:
+        try:
+            show_ip = configuration["show_ip_if_hostname_available"]
+        except KeyError:
             configuration["show_ip_if_hostname_available"] = True
             show_ip = True
             with open("config.json", 'w') as file:
