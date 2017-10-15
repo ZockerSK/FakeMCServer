@@ -7,16 +7,9 @@ import byte_utils
 
 
 class SocketServer:
-    ip = None
-    port = None
-    motd = None
-    version_text = None
-    kick_message = None
-    samples = None
-    server_icon = None
-    sock = None
 
-    def __init__(self, ip, port, motd, version_text, kick_message, samples, server_icon, logger):
+    def __init__(self, ip, port, motd, version_text, kick_message, samples, server_icon, logger, show_ip):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.ip = ip
         self.port = port
         self.motd = motd
@@ -25,6 +18,7 @@ class SocketServer:
         self.samples = samples
         self.server_icon = server_icon
         self.logger = logger
+        self.show_ip = show_ip
 
     def on_new_client(self, client_socket, addr):
         data = client_socket.recv(1024)
@@ -46,6 +40,13 @@ class SocketServer:
 
                 (port, i) = byte_utils.read_ushort(data, i)
                 (state, i) = byte_utils.read_varint(data, i)
+
+                fqdn = socket.getfqdn(ip)
+                if self.show_ip and ip != fqdn:
+                    ip = fqdn + "/" + ip
+                else:
+                    ip = fqdn
+
                 if state == 1:
                     self.logger.info(("[%s:%s] Received client " + ("(using ForgeModLoader) " if is_using_fml else "") +
                                       "ping packet (%s:%s).") % (addr[0], addr[1], ip, port))
@@ -105,7 +106,6 @@ class SocketServer:
         client_socket.sendall(response_array)
 
     def start(self):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind((self.ip, self.port))
         self.sock.settimeout(5000)

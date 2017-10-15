@@ -36,6 +36,14 @@ def main():
         version_text = configuration["version_text"]
         kick_message = ""
         samples = configuration["samples"]
+        show_ip = configuration["show_ip_if_hostname_available"]
+
+        if show_ip is None:
+            configuration["show_ip_if_hostname_available"] = True
+            show_ip = True
+            with open("config.json", 'w') as file:
+                json.dump(configuration, file, sort_keys=True, indent=4, ensure_ascii=False)
+
         server_icon = None
 
         for message in configuration["kick_message"]:
@@ -49,7 +57,7 @@ def main():
         try:
             global server
             logger.info("Setting up server...")
-            server = SocketServer(ip, port, motd, version_text, kick_message, samples, server_icon, logger)
+            server = SocketServer(ip, port, motd, version_text, kick_message, samples, server_icon, logger, show_ip)
             server.start()
         except KeyboardInterrupt:
             logger.info("Shutting down server...")
@@ -70,6 +78,7 @@ def main():
         configuration["kick_message"] = ["§bSorry", "", "§aThis server is offline!"]
         configuration["server_icon"] = "server_icon.png"
         configuration["samples"] = ["§bexample.com", "", "§4Maintenance"]
+        configuration["show_ip_if_hostname_available"] = True
 
         with open("config.json", 'w') as file:
             json.dump(configuration, file, sort_keys=True, indent=4, ensure_ascii=False)
