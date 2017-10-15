@@ -1,14 +1,13 @@
-import _thread
 import json
 import socket
 import uuid
+from threading import Thread
 
 import byte_utils
 
 
 class SocketServer:
-
-    def __init__(self, ip, port, motd, version_text, kick_message, samples, server_icon, logger, show_ip):
+    def __init__(self, ip, port, motd, version_text, kick_message, samples, server_icon, logger, show_hostname):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.ip = ip
         self.port = port
@@ -18,7 +17,7 @@ class SocketServer:
         self.samples = samples
         self.server_icon = server_icon
         self.logger = logger
-        self.show_ip = show_ip
+        self.show_hostname = show_hostname
 
     def on_new_client(self, client_socket, addr):
         data = client_socket.recv(1024)
@@ -42,8 +41,8 @@ class SocketServer:
                 (port, i) = byte_utils.read_ushort(data, i)
                 (state, i) = byte_utils.read_varint(data, i)
 
-                fqdn = socket.getfqdn(addr[0])
-                if self.show_ip and client_ip != fqdn:
+                fqdn = socket.getfqdn(client_ip)
+                if self.show_hostname and client_ip != fqdn:
                     client_ip = fqdn + "/" + client_ip
 
                 if state == 1:
@@ -112,7 +111,7 @@ class SocketServer:
         self.logger.info("Server started on %s:%s! Waiting for incoming connections..." % (self.ip, self.port))
         while 1:
             (client, address) = self.sock.accept()
-            _thread.start_new_thread(self.on_new_client, (client, address,))
+            Thread(target=self.on_new_client, daemon=True, args=(client, address,)).start()
 
     def close(self):
         self.sock.close()

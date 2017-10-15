@@ -37,10 +37,10 @@ def main():
         kick_message = ""
         samples = configuration["samples"]
         try:
-            show_ip = configuration["show_ip_if_hostname_available"]
+            show_hostname = configuration["show_hostname_if_available"]
         except KeyError:
-            configuration["show_ip_if_hostname_available"] = True
-            show_ip = True
+            configuration["show_hostname_if_available"] = True
+            show_hostname = True
             with open("config.json", 'w') as file:
                 json.dump(configuration, file, sort_keys=True, indent=4, ensure_ascii=False)
 
@@ -57,7 +57,7 @@ def main():
         try:
             global server
             logger.info("Setting up server...")
-            server = SocketServer(ip, port, motd, version_text, kick_message, samples, server_icon, logger, show_ip)
+            server = SocketServer(ip, port, motd, version_text, kick_message, samples, server_icon, logger, show_hostname)
             server.start()
         except KeyboardInterrupt:
             logger.info("Shutting down server...")
