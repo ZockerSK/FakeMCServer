@@ -22,6 +22,7 @@ class SocketServer:
 
     def on_new_client(self, client_socket, addr):
         data = client_socket.recv(1024)
+        client_ip = addr[0]
 
         try:
             (length, i) = byte_utils.read_varint(data, 0)
@@ -42,12 +43,12 @@ class SocketServer:
                 (state, i) = byte_utils.read_varint(data, i)
 
                 fqdn = socket.getfqdn(addr[0])
-                if self.show_ip and addr[0] != fqdn:
-                    addr[0] = fqdn + "/" + ip
+                if self.show_ip and client_ip != fqdn:
+                    client_ip = fqdn + "/" + client_ip
 
                 if state == 1:
                     self.logger.info(("[%s:%s] Received client " + ("(using ForgeModLoader) " if is_using_fml else "") +
-                                      "ping packet (%s:%s).") % (addr[0], addr[1], ip, port))
+                                      "ping packet (%s:%s).") % (client_ip, addr[1], ip, port))
                     motd = {}
                     motd["version"] = {}
                     motd["version"]["name"] = self.version_text
@@ -75,11 +76,11 @@ class SocketServer:
                     self.logger.info(
                         ("[%s:%s] " + (name + " t" if len(name) > 0 else "T") + "ries to connect to the server " +
                          ("(using ForgeModLoader) " if is_using_fml else "") + "(%s:%s).")
-                        % (addr[0], addr[1], ip, port))
+                        % (client_ip, addr[1], ip, port))
                     self.write_response(client_socket, json.dumps({"text": self.kick_message}))
                 else:
                     self.logger.info(
-                        "[%s:%d] Tried to request a login/ping with an unknown state: %d" % (addr[0], addr[1], state))
+                        "[%s:%d] Tried to request a login/ping with an unknown state: %d" % (client_ip, addr[1], state))
             elif packetID == 1:
                 (long, i) = byte_utils.read_long(data, i)
                 response = bytearray()
@@ -87,11 +88,11 @@ class SocketServer:
                 byte_utils.write_varint(response, 1)
                 bytearray.append(long)
                 client_socket.sendall(bytearray)
-                self.logger.info("[%s:%d] Responded with pong packet." % (addr[0], addr[1]))
+                self.logger.info("[%s:%d] Responded with pong packet." % (client_ip, addr[1]))
             else:
-                self.logger.warning("[%s:%d] Sent an unexpected packet: %d" % (addr[0], addr[1], packetID))
+                self.logger.warning("[%s:%d] Sent an unexpected packet: %d" % (client_ip, addr[1], packetID))
         except (TypeError, IndexError):
-            self.logger.warning("[%s:%s] Received invalid data (%s)" % (addr[0], addr[1], data))
+            self.logger.warning("[%s:%s] Received invalid data (%s)" % (client_ip, addr[1], data))
             return
 
     def write_response(self, client_socket, response):
