@@ -35,7 +35,7 @@ class SocketServer:
                 (version, i) = byte_utils.read_varint(data, i)
                 (ip, i) = byte_utils.read_utf(data, i)
 
-                ip = ip.replace('\x00', '')
+                ip = ip.replace('\x00', '').replace("\r", "\\r").replace("\t", "\\t").replace("\n", "\\n")
                 is_using_fml = False
 
                 if ip.endswith("FML"):
