@@ -44,6 +44,8 @@ def main():
             with open("config.json", 'w') as file:
                 json.dump(configuration, file, sort_keys=True, indent=4, ensure_ascii=False)
 
+        player_max = configuration["player_max"]
+        player_online = configuration["player_online"]
         server_icon = None
 
         for message in configuration["kick_message"]:
@@ -57,7 +59,7 @@ def main():
         try:
             global server
             logger.info("Setting up server...")
-            server = SocketServer(ip, port, motd, version_text, kick_message, samples, server_icon, logger, show_hostname)
+            server = SocketServer(ip, port, motd, version_text, kick_message, samples, server_icon, logger, show_hostname, player_max, player_online)
             server.start()
         except KeyboardInterrupt:
             logger.info("Shutting down server...")
@@ -79,6 +81,8 @@ def main():
         configuration["server_icon"] = "server_icon.png"
         configuration["samples"] = ["§bexample.com", "", "§4Maintenance"]
         configuration["show_ip_if_hostname_available"] = True
+        configuration["player_max"] = 10
+        configuration["player_online"] = 10
 
         with open("config.json", 'w') as file:
             json.dump(configuration, file, sort_keys=True, indent=4, ensure_ascii=False)
