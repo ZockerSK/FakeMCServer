@@ -46,6 +46,7 @@ def main():
 
         player_max = configuration["player_max"]
         player_online = configuration["player_online"]
+        protocol = configuration["protocol"]
         server_icon = None
 
         for message in configuration["kick_message"]:
@@ -59,7 +60,7 @@ def main():
         try:
             global server
             logger.info("Setting up server...")
-            server = SocketServer(ip, port, motd, version_text, kick_message, samples, server_icon, logger, show_hostname, player_max, player_online)
+            server = SocketServer(ip, port, motd, version_text, kick_message, samples, server_icon, logger, show_hostname, player_max, player_online, protocol)
             server.start()
         except KeyboardInterrupt:
             logger.info("Shutting down server...")
@@ -73,6 +74,7 @@ def main():
         configuration = {}
         configuration["ip"] = "0.0.0.0"
         configuration["port"] = 25565
+        configuration["protocol"] = 756
         configuration["motd"] = {}
         configuration["motd"]["1"] = "§4Maintenance!"
         configuration["motd"]["2"] = "§aCheck example.com for more information!"
