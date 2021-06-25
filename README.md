@@ -43,6 +43,8 @@ In this configuration you can use typical Minecraft message formatting tags.
 
 `show_..._if_available` enables/disables the resolution of the hostname of the ip/that the IP will be displayed, if the hostname is available
 
+`protocol` is the server's game version ID (see [wiki.vg](https://wiki.vg/Protocol_version_numbers) for more details)
+
 `samples` specifies the player displayed when hovering over the player count/version information.
 
 ![Samples](https://raw.githubusercontent.com/ZockerSK/FakeMCServerImages/main/samples.png)
