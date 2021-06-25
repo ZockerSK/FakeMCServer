@@ -23,6 +23,7 @@ Example configuration:
         "2": "§aCheck example.com for more information!"
     },
     "port": 25565,
+    "protocol": 2,
     "samples": [
         "§bexample.com",
         "",
@@ -31,7 +32,9 @@ Example configuration:
     "server_icon": "server_icon.png",
     "show_hostname_if_available": true,
     "show_ip_if_hostname_available": true,
-    "version_text": "§4Maintenance"
+    "version_text": "§4Maintenance",
+    "player_max": 0,
+    "player_online": 0
 }
 ```
 Please note, that the `server_icon` **must** be 64x64 and a png file.

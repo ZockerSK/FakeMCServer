@@ -7,7 +7,7 @@ import byte_utils
 
 
 class SocketServer:
-    def __init__(self, ip, port, motd, version_text, kick_message, samples, server_icon, logger, show_hostname):
+    def __init__(self, ip, port, motd, version_text, kick_message, samples, server_icon, logger, show_hostname, player_max, player_online, protocol):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.ip = ip
         self.port = port
@@ -18,6 +18,9 @@ class SocketServer:
         self.server_icon = server_icon
         self.logger = logger
         self.show_hostname = show_hostname
+        self.player_max = player_max
+        self.player_online = player_online
+        self.protocol = protocol
 
     def on_new_client(self, client_socket, addr):
         data = client_socket.recv(1024)
@@ -51,10 +54,10 @@ class SocketServer:
                     motd = {}
                     motd["version"] = {}
                     motd["version"]["name"] = self.version_text
-                    motd["version"]["protocol"] = 2
+                    motd["version"]["protocol"] = self.protocol
                     motd["players"] = {}
-                    motd["players"]["max"] = 0
-                    motd["players"]["online"] = 0
+                    motd["players"]["max"] = self.player_max
+                    motd["players"]["online"] = self.player_online
                     motd["players"]["sample"] = []
 
                     for sample in self.samples:
