@@ -109,7 +109,7 @@ class SocketServer:
     def start(self):
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind((self.ip, self.port))
-        self.sock.settimeout(5000)
+        self.sock.settimeout(5)
         self.sock.listen(30)
         self.logger.info("Server started on %s:%s! Waiting for incoming connections..." % (self.ip, self.port))
         while 1:
