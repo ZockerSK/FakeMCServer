@@ -113,7 +113,11 @@ class SocketServer:
         self.sock.listen(30)
         self.logger.info("Server started on %s:%s! Waiting for incoming connections..." % (self.ip, self.port))
         while 1:
-            (client, address) = self.sock.accept()
+            try:
+                (client, address) = self.sock.accept()
+            except socket.timeout:
+                continue  # timeouts may occur but shouldn't worry uns server-side
+            
             Thread(target=self.on_new_client, daemon=True, args=(client, address,)).start()
 
     def close(self):
